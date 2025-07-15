@@ -3,22 +3,35 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "sqlite" // You can change this to PostgreSQL, etc. later
   url      = "file:./dev.db"
 }
 
-model User {
-  id                 String    @id @default(cuid())
-  email              String    @unique
-  password           String
-  name               String
-  role               Role      @default(USER)
-  posts              Post[]
-  comments           Comment[]
-  messagesSent       Message[] @relation("SentMessages")
-  messagesReceived   Message[] @relation("ReceivedMessages")
-  createdAt          DateTime  @default(now())
+enum Role {
+  USER
+  ADMIN
 }
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  password         String
+  name             String
+  role             Role      @default(USER)
+  bio              String?
+  jobTitle         String?
+  company          String?
+  avatarUrl        String?
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  posts            Post[]
+  comments         Comment[]
+  messagesSent     Message[] @relation("SentMessages")
+  messagesReceived Message[] @relation("ReceivedMessages")
+  createdAt        DateTime  @default(now())
+}
+
+
 
 model InviteCode {
   id        String   @id @default(cuid())
@@ -58,9 +71,4 @@ model Message {
   recipient    User     @relation("ReceivedMessages", fields: [recipientId], references: [id])
   recipientId  String
   createdAt    DateTime @default(now())
-}
-
-enum Role {
-  USER
-  ADMIN
 }
