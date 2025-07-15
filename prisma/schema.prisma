@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id                 String    @id @default(cuid())
+  email              String    @unique
+  password           String
+  name               String
+  role               Role      @default(USER)
+  posts              Post[]
+  comments           Comment[]
+  messagesSent       Message[] @relation("SentMessages")
+  messagesReceived   Message[] @relation("ReceivedMessages")
+  createdAt          DateTime  @default(now())
+}
+
+model InviteCode {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  used      Boolean  @default(false)
+  token     String
+  createdAt DateTime @default(now())
+}
+
+model Post {
+  id        String    @id @default(cuid())
+  content   String
+  imageUrl  String?
+  link      String?
+  author    User      @relation(fields: [authorId], references: [id])
+  authorId  String
+  comments  Comment[]
+  createdAt DateTime  @default(now())
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  gifUrl    String?
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    String
+  createdAt DateTime @default(now())
+}
+
+model Message {
+  id           String   @id @default(cuid())
+  content      String
+  sender       User     @relation("SentMessages", fields: [senderId], references: [id])
+  senderId     String
+  recipient    User     @relation("ReceivedMessages", fields: [recipientId], references: [id])
+  recipientId  String
+  createdAt    DateTime @default(now())
+}
+
+enum Role {
+  USER
+  ADMIN
+}
