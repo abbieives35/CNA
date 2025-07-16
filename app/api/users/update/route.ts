@@ -1,24 +1,43 @@
+import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromToken } from "@/lib/auth";
-import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 export async function PUT(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  const token = authHeader?.replace("Bearer ", "");
-
+  const token = req.headers.get("authorization")?.replace("Bearer ", "");
   const user = await getUserFromToken(token);
+
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { bio, jobTitle, company } = await req.json();
+  const { bio, jobTitle, company, avatarUrl, name } = await req.json();
 
-  const updated = await prisma.user.update({
-    where: { id: user.id },
-    data: { bio, jobTitle, company, avatarUrl, },
-  });
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        bio,
+        jobTitle,
+        company,
+        avatarUrl,
+        name,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        bio: true,
+        jobTitle: true,
+        company: true,
+        avatarUrl: true,
+      },
+    });
 
-  return NextResponse.json({ user: updated });
+    return NextResponse.json({ user: updatedUser });
+  } catch (error) {
+    console.error("Profile update error:", error);
+    return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
+  }
 }
